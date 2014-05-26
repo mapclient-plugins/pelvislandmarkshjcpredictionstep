@@ -37,9 +37,8 @@ class MayaviHJCPredictionViewerWidget(QDialog):
     defaultColor = colours['bone']
     objectTableHeaderColumns = {'visible':0, 'type':1}
     backgroundColour = (0.0,0.0,0.0)
-    _sourceRenderArgs = {'mode':'point', 'scale_factor':0.1, 'color':(0,1,0)}
-    _targetRenderArgs = {'mode':'point', 'scale_factor':0.1, 'color':(1,0,0)}
-    _registeredRenderArgs = {'mode':'point', 'scale_factor':0.1, 'color':(1,1,0)}
+    _landmarkRenderArgs = {'mode':'sphere', 'scale_factor':5.0, 'color':(0,1,0)}
+    _hjcRenderArgs = {'mode':'sphere', 'scale_factor':10.0, 'color':(1,0,0)}
 
     def __init__(self, landmarks, config, predict, predMethods, popClasses, parent=None):
         '''
@@ -54,6 +53,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
         self.selectedObjectName = None
         self._landmarks = landmarks
+        self._landmarkNames = sorted(self._landmarks.keys())
         self._predictFunc = predictFunc
         self._predMethods = predMethods
         self._popClasses = popClasses
@@ -63,9 +63,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
         ### FIX FROM HERE ###
         # create self._objects
-        self._objects = MayaviViewerObjectsContainer()
-        self._objects.addObject('source', MayaviViewerDataPoints('source', self._sourceData, renderArgs=self._sourceRenderArgs))
-
+        self._initViewerObjects()
         self._setupGui()
         self._makeConnections()
         self._initialiseObjectTable()
@@ -76,62 +74,53 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         # self.drawObjects()
         print 'finished init...', self._config
 
+    def _initViewerObjects(self):
+        self._objects = MayaviViewerObjectsContainer()
+        for ln in self._landmarksNames:
+            self._objects.addObject(ln, MayaviViewerLandmarkPoint(ln, self._landmarks[ln], renderArgs=self._landmarkRenderArgs))
+        
+        self._objects.addObject('HJC_left', MayaviViewerLandmarkPoint('HJC_left', [0,0,0], renderArgs=self._hjcRenderArgs))
+        self._objects.addObject('HJC_right', MayaviViewerLandmarkPoint('HJC_right', [0,0,0], renderArgs=self._hjcRenderArgs))
+
     def _setupGui(self):
-        self._ui.samplesLineEdit.setValidator(QIntValidator())
-        self._ui.xtolLineEdit.setValidator(QDoubleValidator())
-        self._ui.initTransXLineEdit.setValidator(QDoubleValidator())
-        self._ui.initTransYLineEdit.setValidator(QDoubleValidator())
-        self._ui.initTransZLineEdit.setValidator(QDoubleValidator())
-        self._ui.initRotXLineEdit.setValidator(QDoubleValidator())
-        self._ui.initRotYLineEdit.setValidator(QDoubleValidator())
-        self._ui.initRotZLineEdit.setValidator(QDoubleValidator())
-        self._ui.initScaleLineEdit.setValidator(QDoubleValidator())
+        self._ui.screenshotPixelXLineEdit.setValidator(QIntValidator())
+        self._ui.screenshotPixelYLineEdit.setValidator(QIntValidator())
+        for l in self._landmarks.keys():
+            self._ui.comboBoxLASIS.addItem(l)
+            self._ui.comboBoxRASIS.addItem(l)
+            self._ui.comboBoxLPSIS.addItem(l)
+            self._ui.comboBoxRPSIS.addItem(l)
+            self._ui.comboBoxPS.addItem(l)
+
+        for m in self._predMethods:
+            self._ui.comboBoxPredMethod.addItem(m)
+
+        for p in self._popClasses:
+            self._ui.comboBoxPopClass.addItem(p)
 
     def _makeConnections(self):
         self._ui.tableWidget.itemClicked.connect(self._tableItemClicked)
         self._ui.tableWidget.itemChanged.connect(self._visibleBoxChanged)
         self._ui.screenshotSaveButton.clicked.connect(self._saveScreenShot)
-        self._ui.registerButton.clicked.connect(self._register)
+        self._ui.preditButton.clicked.connect(self._predict)
         self._ui.resetButton.clicked.connect(self._reset)
         self._ui.abortButton.clicked.connect(self._abort)
         self._ui.acceptButton.clicked.connect(self._accept)
 
-        self._ui.regMethodsComboBox.activated.connect(self._updateConfigRegMethod)
+        self._ui.comboBoxPredMethod.activated.connect(self._updateConfigPredMethod)
+        self._ui.comboBoxPopClass.activated.connect(self._updateConfigPopClass)
         self._ui.xtolLineEdit.textChanged.connect(self._updateConfigXtol)
         self._ui.samplesLineEdit.textChanged.connect(self._updateConfigSamples)
 
-        self._ui.initTransXLineEdit.textChanged.connect(self._updateInitTrans)
-        self._ui.initTransYLineEdit.textChanged.connect(self._updateInitTrans)
-        self._ui.initTransZLineEdit.textChanged.connect(self._updateInitTrans)
-
-        self._ui.initRotXLineEdit.textChanged.connect(self._updateInitRot)
-        self._ui.initRotYLineEdit.textChanged.connect(self._updateInitRot)
-        self._ui.initRotZLineEdit.textChanged.connect(self._updateInitRot)
-
-        self._ui.initScaleLineEdit.textChanged.connect(self._updateInitScale)
-
     def _initialiseSettings(self):
-        self._ui.xtolLineEdit.setText(self._config['Min Relative Error'])
-        self._ui.samplesLineEdit.setText(self._config['Points to Sample'])
+        self._ui.comboBoxPredMethod.setCurrentIndex(self._predMethods.index(self._config['Prediction Method']))
+        self._ui.comboBoxPopClass.setCurrentIndex(self._popClasses.index(self._config['Population Class']))
+        self._ui.comboBoxLASIS.setCurrentIndex(self._landmarkNames.index(self._config['LASIS']))
+        self._ui.comboBoxRASIS.setCurrentIndex(self._landmarkNames.index(self._config['RASIS']))
+        self._ui.comboBoxLPSIS.setCurrentIndex(self._landmarkNames.index(self._config['LPSIS']))
+        self._ui.comboBoxRPSIS.setCurrentIndex(self._landmarkNames.index(self._config['RPSIS']))
+        self._ui.comboBoxPS.setCurrentIndex(self._landmarkNames.index(self._config['PS']))
 
-        # print 'initialising settings...', self._config
-
-        for m in self._regMethods:
-            self._ui.regMethodsComboBox.addItem(m)
-
-        self._ui.regMethodsComboBox.setCurrentIndex(self._regMethods.index(self._config['Registration Method']))
-
-        initTrans = eval(self._config['Init Trans'])
-        self._ui.initTransXLineEdit.setText(str(initTrans[0]))
-        self._ui.initTransYLineEdit.setText(str(initTrans[1]))
-        self._ui.initTransZLineEdit.setText(str(initTrans[2]))
-
-        initRot = eval(self._config['Init Rot'])
-        self._ui.initRotXLineEdit.setText(str(initRot[0]))
-        self._ui.initRotYLineEdit.setText(str(initRot[1]))
-        self._ui.initRotZLineEdit.setText(str(initRot[2]))
-
-        self._ui.initScaleLineEdit.setText(self._config['Init Scale'])
 
     def _initialiseObjectTable(self):
 
