@@ -35,7 +35,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
     Configure dialog to present the user with the options to configure this step.
     '''
     defaultColor = colours['bone']
-    objectTableHeaderColumns = {'visible':0, 'type':1}
+    objectTableHeaderColumns = {'landmarks':0}
     backgroundColour = (0.0,0.0,0.0)
     _landmarkRenderArgs = {'mode':'sphere', 'scale_factor':5.0, 'color':(0,1,0)}
     _hjcRenderArgs = {'mode':'sphere', 'scale_factor':10.0, 'color':(1,0,0)}
@@ -79,8 +79,8 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         for ln in self._landmarksNames:
             self._objects.addObject(ln, MayaviViewerLandmarkPoint(ln, self._landmarks[ln], renderArgs=self._landmarkRenderArgs))
         
-        self._objects.addObject('HJC_left', MayaviViewerLandmarkPoint('HJC_left', [0,0,0], renderArgs=self._hjcRenderArgs))
-        self._objects.addObject('HJC_right', MayaviViewerLandmarkPoint('HJC_right', [0,0,0], renderArgs=self._hjcRenderArgs))
+        # self._objects.addObject('HJC_left', MayaviViewerLandmarkPoint('HJC_left', [0,0,0], renderArgs=self._hjcRenderArgs))
+        # self._objects.addObject('HJC_right', MayaviViewerLandmarkPoint('HJC_right', [0,0,0], renderArgs=self._hjcRenderArgs))
 
     def _setupGui(self):
         self._ui.screenshotPixelXLineEdit.setValidator(QIntValidator())
@@ -102,40 +102,63 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         self._ui.tableWidget.itemClicked.connect(self._tableItemClicked)
         self._ui.tableWidget.itemChanged.connect(self._visibleBoxChanged)
         self._ui.screenshotSaveButton.clicked.connect(self._saveScreenShot)
-        self._ui.preditButton.clicked.connect(self._predict)
+        self._ui.predictButton.clicked.connect(self._predict)
         self._ui.resetButton.clicked.connect(self._reset)
         self._ui.abortButton.clicked.connect(self._abort)
         self._ui.acceptButton.clicked.connect(self._accept)
 
         self._ui.comboBoxPredMethod.activated.connect(self._updateConfigPredMethod)
         self._ui.comboBoxPopClass.activated.connect(self._updateConfigPopClass)
-        self._ui.xtolLineEdit.textChanged.connect(self._updateConfigXtol)
-        self._ui.samplesLineEdit.textChanged.connect(self._updateConfigSamples)
+        self._ui.comboBoxLASIS.activated.connect(self._updateConfigLASIS)
+        self._ui.comboBoxRASIS.activated.connect(self._updateConfigRASIS)
+        self._ui.comboBoxLPSIS.activated.connect(self._updateConfigLPSIS)
+        self._ui.comboBoxRPSIS.activated.connect(self._updateConfigRPSIS)
+        self._ui.comboBoxPS.activated.connect(self._updateConfigPS)
 
     def _initialiseSettings(self):
         self._ui.comboBoxPredMethod.setCurrentIndex(self._predMethods.index(self._config['Prediction Method']))
         self._ui.comboBoxPopClass.setCurrentIndex(self._popClasses.index(self._config['Population Class']))
-        self._ui.comboBoxLASIS.setCurrentIndex(self._landmarkNames.index(self._config['LASIS']))
-        self._ui.comboBoxRASIS.setCurrentIndex(self._landmarkNames.index(self._config['RASIS']))
-        self._ui.comboBoxLPSIS.setCurrentIndex(self._landmarkNames.index(self._config['LPSIS']))
-        self._ui.comboBoxRPSIS.setCurrentIndex(self._landmarkNames.index(self._config['RPSIS']))
-        self._ui.comboBoxPS.setCurrentIndex(self._landmarkNames.index(self._config['PS']))
+        if self._config['LASIS'] in self._landmarkNames:
+            self._ui.comboBoxLASIS.setCurrentIndex(self._landmarkNames.index(self._config['LASIS']))
+        else:
+            self._ui.comboBoxLASIS.setCurrentIndex(0)
 
+        if self._config['RASIS'] in self._landmarkNames:
+            self._ui.comboBoxRASIS.setCurrentIndex(self._landmarkNames.index(self._config['RASIS']))
+        else:
+            self._ui.comboBoxRASIS.setCurrentIndex(0)
+
+        if self._config['LPSIS'] in self._landmarkNames:
+            self._ui.comboBoxLPSIS.setCurrentIndex(self._landmarkNames.index(self._config['LPSIS']))
+        else:
+            self._ui.comboBoxLPSIS.setCurrentIndex(0)
+
+        if self._config['RPSIS'] in self._landmarkNames:
+            self._ui.comboBoxRPSIS.setCurrentIndex(self._landmarkNames.index(self._config['RPSIS']))
+        else:
+            self._ui.comboBoxRPSIS.setCurrentIndex(0)
+
+        if self._config['PS'] in self._landmarkNames:
+            self._ui.comboBoxPS.setCurrentIndex(self._landmarkNames.index(self._config['PS']))
+        else:
+            self._ui.comboBoxPS.setCurrentIndex(0)
 
     def _initialiseObjectTable(self):
-
         self._ui.tableWidget.setRowCount(self._objects.getNumberOfObjects())
         self._ui.tableWidget.verticalHeader().setVisible(False)
         self._ui.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self._ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self._ui.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
         
-        self._addObjectToTable(0, 'source', self._objects.getObject('source'))
-        self._addObjectToTable(1, 'target', self._objects.getObject('target'))
-        self._addObjectToTable(2, 'registered', self._objects.getObject('registered'), checked=False)
+        r = 0
+        for ln in self._landmarkNames:
+            self._addObjectToTable(r, ln, self._objects.getObject(ln))
+            r += 1
 
-        self._ui.tableWidget.resizeColumnToContents(self.objectTableHeaderColumns['visible'])
-        self._ui.tableWidget.resizeColumnToContents(self.objectTableHeaderColumns['type'])
+        # self._addObjectToTable(r, 'HJC_left', self._objects.getObject('HJC_left'), checked=False)
+        # self._addObjectToTable(r+1, 'HJC_right', self._objects.getObject('HJC_right'), checked=False)
+
+        self._ui.tableWidget.resizeColumnToContents(self.objectTableHeaderColumns['landmarks'])
 
     def _addObjectToTable(self, row, name, obj, checked=True):
         typeName = obj.typeName
@@ -147,13 +170,15 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         else:
             tableItem.setCheckState(Qt.Unchecked)
 
-        self._ui.tableWidget.setItem(row, self.objectTableHeaderColumns['visible'], tableItem)
-        self._ui.tableWidget.setItem(row, self.objectTableHeaderColumns['type'], QTableWidgetItem(typeName))
+        self._ui.tableWidget.setItem(row, self.objectTableHeaderColumns['landmarks'], tableItem)
+        # self._ui.tableWidget.setItem(row, self.objectTableHeaderColumns['type'], QTableWidgetItem(typeName))
 
     def _tableItemClicked(self):
         selectedRow = self._ui.tableWidget.currentRow()
-        self.selectedObjectName = self._ui.tableWidget.item(selectedRow, self.objectTableHeaderColumns['visible']).text()
-        self._populateScalarsDropDown(self.selectedObjectName)
+        self.selectedObjectName = self._ui.tableWidget.item(
+                                    selectedRow,
+                                    self.objectTableHeaderColumns['landmarks']
+                                    ).text()
         print selectedRow
         print self.selectedObjectName
 
@@ -162,7 +187,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         # name = self._getSelectedObjectName()
 
         # checked changed item is actually the checkbox
-        if tableItem.column()==self.objectTableHeaderColumns['visible']:
+        if tableItem.column()==self.objectTableHeaderColumns['landmarks']:
             # get visible status
             name = tableItem.text()
             visible = tableItem.checkState().name=='Checked'
@@ -190,30 +215,29 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         for name in self._objects.getObjectNames():
             self._objects.getObject(name).draw(self._scene)
 
-    def _updateConfigRegMethod(self):
-        self._config['Registration Method'] = self._ui.regMethodsComboBox.currentText()
+    def _updateConfigPredMethod(self):
+        self._config['Predction Method'] = self._ui.comboBoxPredMethod.currentText()
 
-    def _updateConfigXtol(self):
-        self._config['Min Relative Error'] = self._ui.xtolLineEdit.text()
+    def _updateConfigPopClass(self):
+        self._config['Population Class'] = self._ui.comboBoxPopClass.currentText()
 
-    def _updateConfigSamples(self):
-        self._config['Points to Sample'] = self._ui.samplesLineEdit.text()
+    def _updateConfigLASIS(self):
+        self._config['LASIS'] = self._ui.comboBoxLASIS.currentText()
 
-    def _updateInitTrans(self):
-        self._config['Init Trans'] = '[' + self._ui.initTransXLineEdit.text() + ','\
-                                         + self._ui.initTransYLineEdit.text() + ','\
-                                         + self._ui.initTransZLineEdit.text() + ']'
+    def _updateConfigRASIS(self):
+        self._config['RASIS'] = self._ui.comboBoxRASIS.currentText()
 
-    def _updateInitRot(self):
-        self._config['Init Rot'] = '[' + self._ui.initRotXLineEdit.text() + ','\
-                                       + self._ui.initRotYLineEdit.text() + ','\
-                                       + self._ui.initRotZLineEdit.text() + ']'
+    def _updateConfigLPSIS(self):
+        self._config['LPSIS'] = self._ui.comboBoxLPSIS.currentText()
 
-    def _updateInitScale(self):
-        self._config['Init Scale'] = self._ui.initScaleLineEdit.text()
+    def _updateConfigRPSIS(self):
+        self._config['RPSIS'] = self._ui.comboBoxRPSIS.currentText()
 
-    def _register(self):
-        transform, self._registeredData, RMSE = self._registerFunc()
+    def _updateConfigPS(self):
+        self._config['PS'] = self._ui.comboBoxPS.currentText()
+
+    def _predict(self):
+        self._predictFunc()
         # registeredObj = MayaviViewerDataPoints('registered', self._registeredData, renderArgs=self._registeredRenderArgs)
         # self._objects.addObject('registered', registeredObj)
         # self._addObjectToTable(2, 'registered', registeredObj)
@@ -223,25 +247,33 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         # print 'table items added'
 
         # update registered datacloud
-        regObj = self._objects.getObject('registered')
-        regObj.updateGeometry(self._registeredData, self._scene)
-        regTableItem = self._ui.tableWidget.item(2, self.objectTableHeaderColumns['visible'])
-        regTableItem.setCheckState(Qt.Checked)
+        hjclObj = self._objects.getObject('HJC_left')
+        hjclObj.updateGeometry(self._landmarks['HJC_left'], self._scene)
+        hjclTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_left'),
+                                                  self.objectTableHeaderColumns['landmarks'])
+        hjclTableItem.setCheckState(Qt.Checked)
 
-        # update error fields
-        self._ui.RMSELineEdit.setText(str(RMSE))
+        hjcrObj = self._objects.getObject('HJC_right')
+        hjcrObj.updateGeometry(self._landmarks['HJC_right'], self._scene)
+        hjcrTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_right'),
+                                                  self.objectTableHeaderColumns['landmarks'])
+        hjcrTableItem.setCheckState(Qt.Checked)
 
     def _reset(self):
         # delete viewer table row
         # self._ui.tableWidget.removeRow(2)
         # reset registered datacloud
-        regObj = self._objects.getObject('registered')
-        regObj.updateGeometry(self._sourceData, self._scene)
-        regTableItem = self._ui.tableWidget.item(2, self.objectTableHeaderColumns['visible'])
-        regTableItem.setCheckState(Qt.Unchecked)
+        hjclObj = self._objects.getObject('HJC_left')
+        hjclObj.updateGeometry(np.array([0,0,0]), self._scene)
+        hjclTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_left'),
+                                                  self.objectTableHeaderColumns['landmarks'])
+        hjclTableItem.setCheckState(Qt.Unchecked)
 
-        # clear error fields
-        self._ui.RMSELineEdit.clear()
+        hjcrObj = self._objects.getObject('HJC_right')
+        hjcrObj.updateGeometry(np.array([0,0,0]), self._scene)
+        hjcrTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_right'),
+                                                  self.objectTableHeaderColumns['landmarks'])
+        hjcrTableItem.setCheckState(Qt.Unchecked)
 
     def _accept(self):
         self._close()
@@ -262,7 +294,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
     def _refresh(self):
         for r in xrange(self._ui.tableWidget.rowCount()):
-            tableItem = self._ui.tableWidget.item(r, self.objectTableHeaderColumns['visible'])
+            tableItem = self._ui.tableWidget.item(r, self.objectTableHeaderColumns['landmarks'])
             name = tableItem.text()
             visible = tableItem.checkState().name=='Checked'
             obj = self._objects.getObject(name)

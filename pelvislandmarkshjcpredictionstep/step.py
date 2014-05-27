@@ -55,6 +55,8 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         Make sure you call the _doneExecution() method when finished.  This method
         may be connected up to a button in a widget for example.
         '''
+        self._landmarks['HJC_left'] = [0,0,0]
+        self._landmarks['HJC_right'] = [0,0,0]
         self._getHipLandmarks()
         self._alignHipCS()
 
