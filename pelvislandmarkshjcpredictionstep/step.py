@@ -16,7 +16,7 @@ from workutils import mesh_alignment as ma
 import numpy as np
 
 METHODS = ('Seidel', 'Bell', 'Tylkowski')
-POP_CLASS = ('adults', 'males', 'females')
+POP_CLASS = ('adults', 'men', 'women')
 HIPLANDMARKS = ('LASIS', 'RASIS', 'LPSIS', 'RPSIS', 'PS')
 
 class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
@@ -49,29 +49,40 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         self._hipLandmarks = None
         self._hipLandmarksAligned = None
 
+
     def execute(self):
-        '''
-        Add your code here that will kick off the execution of the step.
-        Make sure you call the _doneExecution() method when finished.  This method
-        may be connected up to a button in a widget for example.
-        '''
-        self._landmarks['HJC_left'] = [0,0,0]
-        self._landmarks['HJC_right'] = [0,0,0]
-        self._getHipLandmarks()
-        self._alignHipCS()
+		'''
+		Add your code here that will kick off the execution of the step.
+		Make sure you call the _doneExecution() method when finished.  This method
+		may be connected up to a button in a widget for example.
+		'''
+		self._landmarks['HJC_left'] = np.array([0,0,0], dtype=float)
+		self._landmarks['HJC_right'] = np.array([0,0,0], dtype=float)
+		self._getHipLandmarks()
+		self._alignHipCS()
 
-        if self._config['GUI']:
-            self._widget = MayaviHJCPredictionViewerWidget(self._landmarks, self._config, self.predict, METHODS, POP_CLASS)
-            # self._widget._ui.registerButton.clicked.connect(self._register)
-            self._widget._ui.acceptButton.clicked.connect(self._doneExecution)
-            self._widget._ui.abortButton.clicked.connect(self._abort)
-            self._widget._ui.resetButton.clicked.connect(self._reset)
-            self._widget.setModal(True)
-            self._setCurrentWidget(self._widget)
-        else:
-            self.predict()
+		self._hipLandmarks['HJC_left'] = np.array([0,0,0], dtype=float)
+		self._hipLandmarks['HJC_right'] = np.array([0,0,0], dtype=float)
+		self._hipLandmarksAligned['HJC_left'] = np.array([0,0,0], dtype=float)
+		self._hipLandmarksAligned['HJC_right'] = np.array([0,0,0], dtype=float)
 
-        self._doneExecution()
+		if self._config['GUI']:
+			print 'launching prediction gui'
+			self._widget = MayaviHJCPredictionViewerWidget(self._landmarks,
+														   self._config,
+														   self.predict,
+														   METHODS,
+														   POP_CLASS)
+			self._widget._ui.acceptButton.clicked.connect(self._doneExecution)
+			self._widget._ui.abortButton.clicked.connect(self._abort)
+			self._widget.setModal(True)
+			self._setCurrentWidget(self._widget)
+		else:
+			self.predict()
+			self.doneExecution()
+
+    def _abort(self):
+		raise RuntimeError('HJC Prediction Aborted')
 
     def _getHipLandmarks(self):
         self._hipLandmarks = {}
@@ -87,23 +98,26 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
          # align landmarks to hip CS
         hipLandmarks = self._hipLandmarks.items()
         landmarkNames = [l[0] for l in hipLandmarks]
-        landmarkCoords = [l[1] for l in hipLandmarks]
+        landmarkCoords = np.array([l[1] for l in hipLandmarks])
         landmarkCoordsAligned, alignT = ma.alignAnatomicPelvis(landmarkCoords,
                                                                self._hipLandmarks['LASIS'],
                                                                self._hipLandmarks['RASIS'],
                                                                self._hipLandmarks['LPSIS'],
                                                                self._hipLandmarks['RPSIS'],
                                                                returnT=True )
-        self._hipLandmarksAligned = dict(landmarkCoordsAligned)
-        self._inverseT = inv(np.hstack([alignT, [0,0,0,1]]))
+        self._hipLandmarksAligned = dict(zip(landmarkNames,landmarkCoordsAligned))
+        self._inverseT = np.linalg.inv(np.vstack([alignT, [0,0,0,1]]))
 
     def predict(self):
          # run predictions methods
-        if self.config['Prediction Method']=='Seidel':
+        print 'predicting using %s (%s)'%(self._config['Prediction Method'],
+        								  self._config['Population Class'],
+        								 )
+        if self._config['Prediction Method']=='Seidel':
             self._predict(('LASIS', 'RASIS', 'LPSIS', 'RPSIS', 'PS'), hjc.HJCSeidel)
-        elif self.config['Prediction Method']=='Tylkowski':
+        elif self._config['Prediction Method']=='Tylkowski':
             self._predict(('LASIS', 'RASIS'), hjc.HJCTylkowski)
-        elif self.config['Prediction Method']=='Bell':
+        elif self._config['Prediction Method']=='Bell':
             self._predict(('LASIS', 'RASIS', 'PS'), hjc.HJCBell)
 
     def _predict(self, reqLandmarks, predictor):
@@ -114,13 +128,20 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
             except KeyError:
                 raise RuntimeError, 'HJC prediction failed, missing landmark: '+l
         L.append(self._config['Population Class'])
-        predictions = predictor(*L)
+        predictions = np.array(predictor(*L)[:2])
+
         self._hipLandmarksAligned['HJC_left'] = predictions[0]
         self._hipLandmarksAligned['HJC_right'] = predictions[1]
-        self._hipLandmarks['HJC_left'] = ma.transform3D.transformAffine( predictions[0], self._inverseT )
-        self._hipLandmarks['HJC_right'] = ma.transform3D.transformAffine( predictions[1], self._inverseT )
-        self._landmarks['HJC_left'] = ma.transform3D.transformAffine( predictions[0], self._inverseT )
-        self._landmarks['HJC_right'] = ma.transform3D.transformAffine( predictions[1], self._inverseT )
+
+        self._hipLandmarks['HJC_left'],\
+        self._hipLandmarks['HJC_right'] = ma.transform3D.transformAffine(predictions, self._inverseT)
+        self._landmarks['HJC_left'],\
+        self._landmarks['HJC_right'] = ma.transform3D.transformAffine(predictions, self._inverseT)
+
+        # self._hipLandmarks['HJC_left'] = ma.transform3D.transformAffine( [predictions[0],], self._inverseT )
+        # self._hipLandmarks['HJC_right'] = ma.transform3D.transformAffine( [predictions[1],], self._inverseT )
+        # self._landmarks['HJC_left'] = ma.transform3D.transformAffine( [predictions[0],], self._inverseT )
+        # self._landmarks['HJC_right'] = ma.transform3D.transformAffine( [predictions[1],], self._inverseT )
 
     def setPortData(self, index, dataIn):
         '''

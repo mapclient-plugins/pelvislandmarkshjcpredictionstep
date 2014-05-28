@@ -103,9 +103,9 @@ class ConfigureDialog(QtGui.QDialog):
         self._ui.comboBoxMethod.setCurrentIndex(self._methods.index(config['Prediction Method']))
         self._ui.comboBoxClass.setCurrentIndex(self._popClasses.index(config['Population Class']))
         self._ui.lineEditLASIS.setText(config['LASIS'])
-        self._ui.lineEditLASIS.setText(config['RASIS'])
-        self._ui.lineEditLASIS.setText(config['LPSIS'])
-        self._ui.lineEditLASIS.setText(config['LPSIS'])
-        self._ui.lineEditLASIS.setText(config['PS'])
+        self._ui.lineEditRASIS.setText(config['RASIS'])
+        self._ui.lineEditLPSIS.setText(config['LPSIS'])
+        self._ui.lineEditRPSIS.setText(config['RPSIS'])
+        self._ui.lineEditPS.setText(config['PS'])
         self._ui.checkBoxGUI.setChecked(bool(config['GUI']))
 

@@ -28,7 +28,8 @@ from pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwidget import Ui_Dia
 from traits.api import HasTraits, Instance, on_trait_change, \
     Int, Dict
 
-from mappluginutils.mayaviviewer import MayaviViewerObjectsContainer, MayaviViewerDataPoints, colours
+from mappluginutils.mayaviviewer import MayaviViewerObjectsContainer, MayaviViewerLandmark, colours
+import numpy as np
 
 class MayaviHJCPredictionViewerWidget(QDialog):
     '''
@@ -40,7 +41,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
     _landmarkRenderArgs = {'mode':'sphere', 'scale_factor':5.0, 'color':(0,1,0)}
     _hjcRenderArgs = {'mode':'sphere', 'scale_factor':10.0, 'color':(1,0,0)}
 
-    def __init__(self, landmarks, config, predict, predMethods, popClasses, parent=None):
+    def __init__(self, landmarks, config, predictFunc, predMethods, popClasses, parent=None):
         '''
         Constructor
         '''
@@ -76,16 +77,22 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
     def _initViewerObjects(self):
         self._objects = MayaviViewerObjectsContainer()
-        for ln in self._landmarksNames:
-            self._objects.addObject(ln, MayaviViewerLandmarkPoint(ln, self._landmarks[ln], renderArgs=self._landmarkRenderArgs))
+        for ln in self._landmarkNames:
+            self._objects.addObject(ln, MayaviViewerLandmark(ln, self._landmarks[ln],
+                                                             renderArgs=self._landmarkRenderArgs)
+                                    )
         
-        # self._objects.addObject('HJC_left', MayaviViewerLandmarkPoint('HJC_left', [0,0,0], renderArgs=self._hjcRenderArgs))
-        # self._objects.addObject('HJC_right', MayaviViewerLandmarkPoint('HJC_right', [0,0,0], renderArgs=self._hjcRenderArgs))
+        hjcl = self._objects.getObject('HJC_left')
+        hjcl.setRenderArgs(self._hjcRenderArgs)
+        hjcr = self._objects.getObject('HJC_right')
+        hjcr.setRenderArgs(self._hjcRenderArgs)
+        # self._objects.addObject('HJC_left', MayaviViewerLandmark('HJC_left', [0,0,0], renderArgs=self._hjcRenderArgs))
+        # self._objects.addObject('HJC_right', MayaviViewerLandmark('HJC_right', [0,0,0], renderArgs=self._hjcRenderArgs))
 
     def _setupGui(self):
         self._ui.screenshotPixelXLineEdit.setValidator(QIntValidator())
         self._ui.screenshotPixelYLineEdit.setValidator(QIntValidator())
-        for l in self._landmarks.keys():
+        for l in self._landmarkNames:
             self._ui.comboBoxLASIS.addItem(l)
             self._ui.comboBoxRASIS.addItem(l)
             self._ui.comboBoxLPSIS.addItem(l)
@@ -155,15 +162,18 @@ class MayaviHJCPredictionViewerWidget(QDialog):
             self._addObjectToTable(r, ln, self._objects.getObject(ln))
             r += 1
 
-        # self._addObjectToTable(r, 'HJC_left', self._objects.getObject('HJC_left'), checked=False)
-        # self._addObjectToTable(r+1, 'HJC_right', self._objects.getObject('HJC_right'), checked=False)
+        hjclTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_left'),
+                                                  self.objectTableHeaderColumns['landmarks'])
+        hjclTableItem.setCheckState(Qt.Unchecked)
+        hjcrTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_right'),
+                                                  self.objectTableHeaderColumns['landmarks'])
+        hjcrTableItem.setCheckState(Qt.Unchecked)
 
         self._ui.tableWidget.resizeColumnToContents(self.objectTableHeaderColumns['landmarks'])
 
     def _addObjectToTable(self, row, name, obj, checked=True):
         typeName = obj.typeName
-        print typeName
-        print name
+        print 'adding to table: %s (%s)'%(name, typeName)
         tableItem = QTableWidgetItem(name)
         if checked:
             tableItem.setCheckState(Qt.Checked)
@@ -216,7 +226,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
             self._objects.getObject(name).draw(self._scene)
 
     def _updateConfigPredMethod(self):
-        self._config['Predction Method'] = self._ui.comboBoxPredMethod.currentText()
+        self._config['Prediction Method'] = self._ui.comboBoxPredMethod.currentText()
 
     def _updateConfigPopClass(self):
         self._config['Population Class'] = self._ui.comboBoxPopClass.currentText()
@@ -238,15 +248,8 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
     def _predict(self):
         self._predictFunc()
-        # registeredObj = MayaviViewerDataPoints('registered', self._registeredData, renderArgs=self._registeredRenderArgs)
-        # self._objects.addObject('registered', registeredObj)
-        # self._addObjectToTable(2, 'registered', registeredObj)
-        # print 'added registered data points'
-        # self._ui.tableWidget.resizeColumnToContents(self.objectTableHeaderColumns['visible'])
-        # self._ui.tableWidget.resizeColumnToContents(self.objectTableHeaderColumns['type'])
-        # print 'table items added'
 
-        # update registered datacloud
+        # update predicted HJCs
         hjclObj = self._objects.getObject('HJC_left')
         hjclObj.updateGeometry(self._landmarks['HJC_left'], self._scene)
         hjclTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_left'),
@@ -280,6 +283,8 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
     def _abort(self):
         self._reset()
+        del self._landmarks['HJC_left']
+        del self._landmarks['HJC_right']
         self._close()
 
     def _close(self):
