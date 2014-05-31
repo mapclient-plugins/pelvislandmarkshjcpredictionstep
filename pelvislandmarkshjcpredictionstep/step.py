@@ -79,7 +79,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
 			self._setCurrentWidget(self._widget)
 		else:
 			self.predict()
-			self.doneExecution()
+			self._doneExecution()
 
     def _abort(self):
 		raise RuntimeError('HJC Prediction Aborted')
