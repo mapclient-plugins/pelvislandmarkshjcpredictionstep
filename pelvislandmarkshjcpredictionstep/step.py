@@ -210,7 +210,10 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         conf.setValue('LPSIS', self._config['LPSIS'])
         conf.setValue('RPSIS', self._config['RPSIS'])
         conf.setValue('PS', self._config['PS'])
-        conf.setValue('GUI', self._config['GUI'])
+        if self._config['GUI']:
+            conf.setValue('GUI', 'True')
+        else:
+            conf.setValue('GUI', 'False')
         conf.endGroup()
 
 
@@ -232,7 +235,10 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         self._config['LPSIS'] = conf.value('LPSIS', 'LPSIS')
         self._config['RPSIS'] = conf.value('RPSIS', 'RPSIS')
         self._config['PS'] = conf.value('PS', 'PS')
-        self._config['GUI'] = conf.value('GUI', True)
+        if conf.value('GUI')=='True':
+            self._config['GUI'] = True
+        elif conf.value('GUI')=='False':
+            self._config['GUI'] = False
         conf.endGroup()
 
         d = ConfigureDialog(METHODS, POP_CLASS)
