@@ -26,7 +26,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
     '''
 
     def __init__(self, location):
-        super(PelvisLandmarksHJCPredictionStep, self).__init__('PelvisLandmarksHJCPrediction', location)
+        super(PelvisLandmarksHJCPredictionStep, self).__init__('Pelvis Landmark HJC Prediction', location)
         self._configured = False # A step cannot be executed until it has been configured.
         self._category = 'Anthropometry'
         # Add any other initialisation code here:
