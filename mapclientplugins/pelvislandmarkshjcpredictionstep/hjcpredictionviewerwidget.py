@@ -24,7 +24,7 @@ from PySide.QtGui import QDialog, QFileDialog, QDialogButtonBox, QAbstractItemVi
 from PySide.QtGui import QDoubleValidator, QIntValidator
 from PySide.QtCore import Qt
 
-from pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwidget import Ui_Dialog
+from mapclientplugins.pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwidget import Ui_Dialog
 from traits.api import HasTraits, Instance, on_trait_change, \
     Int, Dict
 
