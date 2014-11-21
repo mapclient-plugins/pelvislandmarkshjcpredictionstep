@@ -33,10 +33,10 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         # Ports:
         self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#uses',
-                      'ju#landmarks'))
+                      'python#dict'))
         self.addPort(('http://physiomeproject.org/workflow/1.0/rdf-schema#port',
                       'http://physiomeproject.org/workflow/1.0/rdf-schema#provides',
-                      'ju#landmarks'))
+                      'python#dict'))
         self._config = {}
         self._config['identifier'] = ''
         self._config['Prediction Method'] = METHODS[0]
