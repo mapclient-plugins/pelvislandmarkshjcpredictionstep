@@ -51,38 +51,38 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
 
 
     def execute(self):
-		'''
-		Add your code here that will kick off the execution of the step.
-		Make sure you call the _doneExecution() method when finished.  This method
-		may be connected up to a button in a widget for example.
-		'''
-		self._landmarks['HJC_left'] = np.array([0,0,0], dtype=float)
-		self._landmarks['HJC_right'] = np.array([0,0,0], dtype=float)
-		self._getHipLandmarks()
-		self._alignHipCS()
+        '''
+        Add your code here that will kick off the execution of the step.
+        Make sure you call the _doneExecution() method when finished.  This method
+        may be connected up to a button in a widget for example.
+        '''
+        self._landmarks['HJC_left'] = np.array([0,0,0], dtype=float)
+        self._landmarks['HJC_right'] = np.array([0,0,0], dtype=float)
+        self._getHipLandmarks()
+        self._alignHipCS()
 
-		self._hipLandmarks['HJC_left'] = np.array([0,0,0], dtype=float)
-		self._hipLandmarks['HJC_right'] = np.array([0,0,0], dtype=float)
-		self._hipLandmarksAligned['HJC_left'] = np.array([0,0,0], dtype=float)
-		self._hipLandmarksAligned['HJC_right'] = np.array([0,0,0], dtype=float)
+        self._hipLandmarks['HJC_left'] = np.array([0,0,0], dtype=float)
+        self._hipLandmarks['HJC_right'] = np.array([0,0,0], dtype=float)
+        self._hipLandmarksAligned['HJC_left'] = np.array([0,0,0], dtype=float)
+        self._hipLandmarksAligned['HJC_right'] = np.array([0,0,0], dtype=float)
 
-		if self._config['GUI']:
-			print 'launching prediction gui'
-			self._widget = MayaviHJCPredictionViewerWidget(self._landmarks,
-														   self._config,
-														   self.predict,
-														   METHODS,
-														   POP_CLASS)
-			self._widget._ui.acceptButton.clicked.connect(self._doneExecution)
-			self._widget._ui.abortButton.clicked.connect(self._abort)
-			self._widget.setModal(True)
-			self._setCurrentWidget(self._widget)
-		else:
-			self.predict()
-			self._doneExecution()
+        if self._config['GUI']:
+            print('launching prediction gui')
+            self._widget = MayaviHJCPredictionViewerWidget(self._landmarks,
+                                                           self._config,
+                                                           self.predict,
+                                                           METHODS,
+                                                           POP_CLASS)
+            self._widget._ui.acceptButton.clicked.connect(self._doneExecution)
+            self._widget._ui.abortButton.clicked.connect(self._abort)
+            self._widget.setModal(True)
+            self._setCurrentWidget(self._widget)
+        else:
+            self.predict()
+            self._doneExecution()
 
     def _abort(self):
-		raise RuntimeError('HJC Prediction Aborted')
+        raise RuntimeError('HJC Prediction Aborted')
 
     def _getHipLandmarks(self):
         self._hipLandmarks = {}
@@ -91,12 +91,12 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
             try:
                 self._hipLandmarks[l] = self._landmarks[lname]
             except KeyError:
-                raise RuntimeError, 'HJC prediction failed, missing landmark: '+lname
+                raise RuntimeError('HJC prediction failed, missing landmark: '+lname)
 
 
     def _alignHipCS(self):
          # align landmarks to hip CS
-        hipLandmarks = self._hipLandmarks.items()
+        hipLandmarks = list(self._hipLandmarks.items())
         landmarkNames = [l[0] for l in hipLandmarks]
         landmarkCoords = np.array([l[1] for l in hipLandmarks])
         landmarkCoordsAligned, alignT = ma.alignAnatomicPelvis(landmarkCoords,
@@ -105,14 +105,14 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
                                                                self._hipLandmarks['LPSIS'],
                                                                self._hipLandmarks['RPSIS'],
                                                                returnT=True )
-        self._hipLandmarksAligned = dict(zip(landmarkNames,landmarkCoordsAligned))
+        self._hipLandmarksAligned = dict(list(zip(landmarkNames,landmarkCoordsAligned)))
         self._inverseT = np.linalg.inv(np.vstack([alignT, [0,0,0,1]]))
 
     def predict(self):
          # run predictions methods
-        print 'predicting using %s (%s)'%(self._config['Prediction Method'],
-        								  self._config['Population Class'],
-        								 )
+        print('predicting using %s (%s)'%(self._config['Prediction Method'],
+                                          self._config['Population Class'],
+                                         ))
         if self._config['Prediction Method']=='Seidel':
             self._predict(('LASIS', 'RASIS', 'LPSIS', 'RPSIS', 'PS'), hjc.HJCSeidel)
         elif self._config['Prediction Method']=='Tylkowski':
@@ -126,7 +126,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
             try:
                 L.append(self._hipLandmarksAligned[l])
             except KeyError:
-                raise RuntimeError, 'HJC prediction failed, missing landmark: '+l
+                raise RuntimeError('HJC prediction failed, missing landmark: '+l)
         L.append(self._config['Population Class'])
         predictions = np.array(predictor(*L)[:2])
 

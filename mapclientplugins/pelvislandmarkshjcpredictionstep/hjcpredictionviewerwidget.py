@@ -73,7 +73,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
         # self.testPlot()
         # self.drawObjects()
-        print 'finished init...', self._config
+        print('finished init...', self._config)
 
     def _initViewerObjects(self):
         self._objects = MayaviViewerObjectsContainer()
@@ -173,7 +173,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
     def _addObjectToTable(self, row, name, obj, checked=True):
         typeName = obj.typeName
-        print 'adding to table: %s (%s)'%(name, typeName)
+        print('adding to table: %s (%s)'%(name, typeName))
         tableItem = QTableWidgetItem(name)
         if checked:
             tableItem.setCheckState(Qt.Checked)
@@ -189,8 +189,8 @@ class MayaviHJCPredictionViewerWidget(QDialog):
                                     selectedRow,
                                     self.objectTableHeaderColumns['landmarks']
                                     ).text()
-        print selectedRow
-        print self.selectedObjectName
+        print(selectedRow)
+        print(self.selectedObjectName)
 
     def _visibleBoxChanged(self, tableItem):
         # get name of object selected
@@ -202,17 +202,17 @@ class MayaviHJCPredictionViewerWidget(QDialog):
             name = tableItem.text()
             visible = tableItem.checkState().name=='Checked'
 
-            print 'visibleboxchanged name', name
-            print 'visibleboxchanged visible', visible
+            print('visibleboxchanged name', name)
+            print('visibleboxchanged visible', visible)
 
             # toggle visibility
             obj = self._objects.getObject(name)
-            print obj.name
+            print(obj.name)
             if obj.sceneObject:
-                print 'changing existing visibility'
+                print('changing existing visibility')
                 obj.setVisibility(visible)
             else:
-                print 'drawing new'
+                print('drawing new')
                 obj.draw(self._scene)
 
     def _getSelectedObjectName(self):
@@ -298,17 +298,17 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         #     self._ui.tableWidget.removeRow(r)
 
     def _refresh(self):
-        for r in xrange(self._ui.tableWidget.rowCount()):
+        for r in range(self._ui.tableWidget.rowCount()):
             tableItem = self._ui.tableWidget.item(r, self.objectTableHeaderColumns['landmarks'])
             name = tableItem.text()
             visible = tableItem.checkState().name=='Checked'
             obj = self._objects.getObject(name)
-            print obj.name
+            print(obj.name)
             if obj.sceneObject:
-                print 'changing existing visibility'
+                print('changing existing visibility')
                 obj.setVisibility(visible)
             else:
-                print 'drawing new'
+                print('drawing new')
                 obj.draw(self._scene)
 
     def _saveScreenShot(self):
@@ -323,7 +323,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         # This function is called when the view is opened. We don't
         # populate the scene when the view is not yet open, as some
         # VTK features require a GLContext.
-        print 'trait_changed'
+        print('trait_changed')
 
         # We can do normal mlab calls on the embedded scene.
         self._scene.mlab.test_points3d()
