@@ -5,7 +5,7 @@ MAP Client Plugin Step
 import os
 
 from PySide import QtGui
-from PySide import QtCore
+import json
 
 from mapclient.mountpoints.workflowstep import WorkflowStepMountPoint
 from mapclientplugins.pelvislandmarkshjcpredictionstep.configuredialog import ConfigureDialog
@@ -41,7 +41,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         self._config['identifier'] = ''
         self._config['Prediction Method'] = METHODS[0]
         self._config['Population Class'] = POP_CLASS[0]
-        self._config['GUI'] = 'True'
+        self._config['GUI'] = True
         for l in HIPLANDMARKS:
             self._config[l] = l
 
@@ -191,59 +191,24 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         '''
         self._config['identifier'] = identifier
 
-    def serialize(self, location):
+    def serialize(self):
         '''
-        Add code to serialize this step to disk.  The filename should
-        use the step identifier (received from getIdentifier()) to keep it
-        unique within the workflow.  The suggested name for the file on
-        disk is:
-            filename = getIdentifier() + '.conf'
+        Add code to serialize this step to disk. Returns a json string for
+        mapclient to serialise.
         '''
-        configuration_file = os.path.join(location, self.getIdentifier() + '.conf')
-        conf = QtCore.QSettings(configuration_file, QtCore.QSettings.IniFormat)
-        conf.beginGroup('config')
-        conf.setValue('identifier', self._config['identifier'])
-        conf.setValue('Prediction Method', self._config['Prediction Method'])
-        conf.setValue('Population Class', self._config['Population Class'])
-        conf.setValue('LASIS', self._config['LASIS'])
-        conf.setValue('RASIS', self._config['RASIS'])
-        conf.setValue('LPSIS', self._config['LPSIS'])
-        conf.setValue('RPSIS', self._config['RPSIS'])
-        conf.setValue('PS', self._config['PS'])
-        if self._config['GUI']:
-            conf.setValue('GUI', 'True')
-        else:
-            conf.setValue('GUI', 'False')
-        conf.endGroup()
+        return json.dumps(self._config, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
-
-    def deserialize(self, location):
+    def deserialize(self, string):
         '''
-        Add code to deserialize this step from disk.  As with the serialize 
-        method the filename should use the step identifier.  Obviously the 
-        filename used here should be the same as the one used by the
-        serialize method.
+        Add code to deserialize this step from disk. Parses a json string
+        given by mapclient
         '''
-        configuration_file = os.path.join(location, self.getIdentifier() + '.conf')
-        conf = QtCore.QSettings(configuration_file, QtCore.QSettings.IniFormat)
-        conf.beginGroup('config')
-        self._config['identifier'] = conf.value('identifier', '')
-        self._config['Prediction Method'] = conf.value('Prediction Method', 'Seidel')
-        self._config['Population Class'] = conf.value('Population Class', 'adults')
-        self._config['LASIS'] = conf.value('LASIS', 'LASIS')
-        self._config['RASIS'] = conf.value('RASIS', 'RASIS')
-        self._config['LPSIS'] = conf.value('LPSIS', 'LPSIS')
-        self._config['RPSIS'] = conf.value('RPSIS', 'RPSIS')
-        self._config['PS'] = conf.value('PS', 'PS')
-        if conf.value('GUI')=='True':
-            self._config['GUI'] = True
-        elif conf.value('GUI')=='False':
-            self._config['GUI'] = False
-        conf.endGroup()
+        self._config.update(json.loads(string))
 
         d = ConfigureDialog(METHODS, POP_CLASS)
         d.identifierOccursCount = self._identifierOccursCount
         d.setConfig(self._config)
         self._configured = d.validate()
+
 
 
