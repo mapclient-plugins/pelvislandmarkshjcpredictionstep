@@ -11,8 +11,8 @@ from mapclient.mountpoints.workflowstep import WorkflowStepMountPoint
 from mapclientplugins.pelvislandmarkshjcpredictionstep.configuredialog import ConfigureDialog
 from mapclientplugins.pelvislandmarkshjcpredictionstep.hjcpredictionviewerwidget import MayaviHJCPredictionViewerWidget
 
-from gias.musculoskeletal import pelvis_hjc_estimation as hjc
-from gias.musculoskeletal import model_alignment as ma
+from gias2.musculoskeletal import pelvis_hjc_estimation as hjc
+from gias2.musculoskeletal import model_alignment as ma
 import numpy as np
 
 METHODS = ('Seidel', 'Bell', 'Tylkowski')
