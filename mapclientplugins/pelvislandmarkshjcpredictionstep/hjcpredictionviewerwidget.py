@@ -28,7 +28,7 @@ from mapclientplugins.pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwid
 from traits.api import HasTraits, Instance, on_trait_change, \
     Int, Dict
 
-from gias2.appluginutils.mayaviviewer import MayaviViewerObjectsContainer, MayaviViewerLandmark, colours
+from gias2.mappluginutils.mayaviviewer import MayaviViewerObjectsContainer, MayaviViewerLandmark, colours
 import numpy as np
 
 class MayaviHJCPredictionViewerWidget(QDialog):
