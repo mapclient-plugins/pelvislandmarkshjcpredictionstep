@@ -218,4 +218,4 @@ class Ui_Dialog(object):
         self.screenshotFilenameLineEdit.setText(QtGui.QApplication.translate("Dialog", "screenshot.png", None, QtGui.QApplication.UnicodeUTF8))
         self.screenshotSaveButton.setText(QtGui.QApplication.translate("Dialog", "Save Screenshot", None, QtGui.QApplication.UnicodeUTF8))
 
-from mappluginutils.mayaviviewer.mayaviscenewidget import MayaviSceneWidget
+from gias2.mappluginutils.mayaviviewer.mayaviscenewidget import MayaviSceneWidget
