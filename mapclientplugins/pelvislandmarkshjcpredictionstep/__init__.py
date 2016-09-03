@@ -20,6 +20,6 @@ This file is part of MAP Client. (http://launchpad.net/mapclient)
 __version__ = '0.1.0'
 __author__ = 'Ju Zhang'
 __stepname__ = 'Pelvis Landmark HJC Prediction'
-__location__ = 'https://github.com/mapclient-plugins/pelvislandmarkshjcpredictionstep/archive/master.zip'
+__location__ = 'https://github.com/mapclient-plugins/pelvislandmarkshjcpredictionstep/archive/v0.1.0.zip'
 
 from mapclientplugins.pelvislandmarkshjcpredictionstep import step
