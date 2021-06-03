@@ -20,9 +20,9 @@ This file is part of MAP Client. (http://launchpad.net/mapclient)
 import os
 os.environ['ETS_TOOLKIT'] = 'qt4'
 
-from PySide.QtGui import QDialog, QFileDialog, QDialogButtonBox, QAbstractItemView, QTableWidgetItem
-from PySide.QtGui import QDoubleValidator, QIntValidator
-from PySide.QtCore import Qt
+from PySide2.QtWidgets import QDialog, QAbstractItemView, QTableWidgetItem
+from PySide2.QtGui import QIntValidator
+from PySide2.QtCore import Qt
 
 from mapclientplugins.pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwidget import Ui_Dialog
 from traits.api import HasTraits, Instance, on_trait_change, \

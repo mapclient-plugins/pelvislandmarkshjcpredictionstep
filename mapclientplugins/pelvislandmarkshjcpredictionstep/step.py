@@ -2,9 +2,7 @@
 '''
 MAP Client Plugin Step
 '''
-import os
 
-from PySide import QtGui
 import json
 
 from mapclient.mountpoints.workflowstep import WorkflowStepMountPoint
