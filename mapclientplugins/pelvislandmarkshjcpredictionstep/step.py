@@ -1,4 +1,3 @@
-
 '''
 MAP Client Plugin Step
 '''
@@ -17,6 +16,7 @@ METHODS = ('Seidel', 'Bell', 'Tylkowski')
 POP_CLASS = ('adults', 'men', 'women')
 HIPLANDMARKS = ('LASIS', 'RASIS', 'LPSIS', 'RPSIS', 'PS')
 
+
 class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
     '''
     Skeleton step which is intended to be a helpful starting point
@@ -25,7 +25,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
 
     def __init__(self, location):
         super(PelvisLandmarksHJCPredictionStep, self).__init__('Pelvis Landmark HJC Prediction', location)
-        self._configured = False # A step cannot be executed until it has been configured.
+        self._configured = False  # A step cannot be executed until it has been configured.
         self._category = 'Anthropometry'
         # Add any other initialisation code here:
         # Ports:
@@ -47,22 +47,21 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         self._hipLandmarks = None
         self._hipLandmarksAligned = None
 
-
     def execute(self):
         '''
         Add your code here that will kick off the execution of the step.
         Make sure you call the _doneExecution() method when finished.  This method
         may be connected up to a button in a widget for example.
         '''
-        self._landmarks['HJC_left'] = np.array([0,0,0], dtype=float)
-        self._landmarks['HJC_right'] = np.array([0,0,0], dtype=float)
+        self._landmarks['HJC_left'] = np.array([0, 0, 0], dtype=float)
+        self._landmarks['HJC_right'] = np.array([0, 0, 0], dtype=float)
         self._getHipLandmarks()
         self._alignHipCS()
 
-        self._hipLandmarks['HJC_left'] = np.array([0,0,0], dtype=float)
-        self._hipLandmarks['HJC_right'] = np.array([0,0,0], dtype=float)
-        self._hipLandmarksAligned['HJC_left'] = np.array([0,0,0], dtype=float)
-        self._hipLandmarksAligned['HJC_right'] = np.array([0,0,0], dtype=float)
+        self._hipLandmarks['HJC_left'] = np.array([0, 0, 0], dtype=float)
+        self._hipLandmarks['HJC_right'] = np.array([0, 0, 0], dtype=float)
+        self._hipLandmarksAligned['HJC_left'] = np.array([0, 0, 0], dtype=float)
+        self._hipLandmarksAligned['HJC_right'] = np.array([0, 0, 0], dtype=float)
 
         if self._config['GUI']:
             print('launching prediction gui')
@@ -89,11 +88,10 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
             try:
                 self._hipLandmarks[l] = self._landmarks[lname]
             except KeyError:
-                raise RuntimeError('HJC prediction failed, missing landmark: '+lname)
-
+                raise RuntimeError('HJC prediction failed, missing landmark: ' + lname)
 
     def _alignHipCS(self):
-         # align landmarks to hip CS
+        # align landmarks to hip CS
         hipLandmarks = list(self._hipLandmarks.items())
         landmarkNames = [l[0] for l in hipLandmarks]
         landmarkCoords = np.array([l[1] for l in hipLandmarks])
@@ -102,20 +100,20 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
                                                                self._hipLandmarks['RASIS'],
                                                                self._hipLandmarks['LPSIS'],
                                                                self._hipLandmarks['RPSIS'],
-                                                               returnT=True )
-        self._hipLandmarksAligned = dict(list(zip(landmarkNames,landmarkCoordsAligned)))
-        self._inverseT = np.linalg.inv(np.vstack([alignT, [0,0,0,1]]))
+                                                               returnT=True)
+        self._hipLandmarksAligned = dict(list(zip(landmarkNames, landmarkCoordsAligned)))
+        self._inverseT = np.linalg.inv(np.vstack([alignT, [0, 0, 0, 1]]))
 
     def predict(self):
-         # run predictions methods
-        print('predicting using %s (%s)'%(self._config['Prediction Method'],
-                                          self._config['Population Class'],
-                                         ))
-        if self._config['Prediction Method']=='Seidel':
+        # run predictions methods
+        print('predicting using %s (%s)' % (self._config['Prediction Method'],
+                                            self._config['Population Class'],
+                                            ))
+        if self._config['Prediction Method'] == 'Seidel':
             self._predict(('LASIS', 'RASIS', 'LPSIS', 'RPSIS', 'PS'), hjc.HJCSeidel)
-        elif self._config['Prediction Method']=='Tylkowski':
+        elif self._config['Prediction Method'] == 'Tylkowski':
             self._predict(('LASIS', 'RASIS'), hjc.HJCTylkowski)
-        elif self._config['Prediction Method']=='Bell':
+        elif self._config['Prediction Method'] == 'Bell':
             self._predict(('LASIS', 'RASIS', 'PS'), hjc.HJCBell)
 
     def _predict(self, reqLandmarks, predictor):
@@ -124,16 +122,16 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
             try:
                 L.append(self._hipLandmarksAligned[l])
             except KeyError:
-                raise RuntimeError('HJC prediction failed, missing landmark: '+l)
+                raise RuntimeError('HJC prediction failed, missing landmark: ' + l)
         L.append(self._config['Population Class'])
         predictions = np.array(predictor(*L)[:2])
 
         self._hipLandmarksAligned['HJC_left'] = predictions[0]
         self._hipLandmarksAligned['HJC_right'] = predictions[1]
 
-        self._hipLandmarks['HJC_left'],\
+        self._hipLandmarks['HJC_left'], \
         self._hipLandmarks['HJC_right'] = ma.transform3D.transformAffine(predictions, self._inverseT)
-        self._landmarks['HJC_left'],\
+        self._landmarks['HJC_left'], \
         self._landmarks['HJC_right'] = ma.transform3D.transformAffine(predictions, self._inverseT)
 
         # self._hipLandmarks['HJC_left'] = ma.transform3D.transformAffine( [predictions[0],], self._inverseT )
@@ -147,7 +145,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         The index is the index of the port in the port list.  If there is only one
         uses port for this step then the index can be ignored.
         '''
-        self._landmarks = dataIn # ju#landmarks
+        self._landmarks = dataIn  # ju#landmarks
 
     def getPortData(self, index):
         '''
@@ -155,7 +153,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         The index is the index of the port in the port list.  If there is only one
         provides port for this step then the index can be ignored.
         '''
-        return self._landmarks # ju#landmarks
+        return self._landmarks  # ju#landmarks
 
     def configure(self):
         '''
@@ -165,16 +163,16 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         then set:
             self._configured = True
         '''
-        #dlg = ConfigureDialog(METHODS, POP_CLASS)
+        # dlg = ConfigureDialog(METHODS, POP_CLASS)
         dlg = ConfigureDialog(self._main_window)
         dlg.identifierOccursCount = self._identifierOccursCount
         dlg.setConfig(self._config)
         dlg.validate()
         dlg.setModal(True)
-        
+
         if dlg.exec_():
             self._config = dlg.getConfig()
-        
+
         self._configured = dlg.validate()
         self._configuredObserver()
 
@@ -204,11 +202,8 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         '''
         self._config.update(json.loads(string))
 
-        #d = ConfigureDialog(METHODS, POP_CLASS)
+        # d = ConfigureDialog(METHODS, POP_CLASS)
         d = ConfigureDialog(self._main_window)
         d.identifierOccursCount = self._identifierOccursCount
         d.setConfig(self._config)
         self._configured = d.validate()
-
-
-
