@@ -18,11 +18,12 @@ This file is part of MAP Client. (http://launchpad.net/mapclient)
     along with MAP Client.  If not, see <http://www.gnu.org/licenses/>..
 '''
 import os
-os.environ['ETS_TOOLKIT'] = 'qt4'
 
-from PySide.QtGui import QDialog, QFileDialog, QDialogButtonBox, QAbstractItemView, QTableWidgetItem
-from PySide.QtGui import QDoubleValidator, QIntValidator
-from PySide.QtCore import Qt
+os.environ['ETS_TOOLKIT'] = 'qt5'
+
+from PySide2.QtWidgets import QDialog, QAbstractItemView, QTableWidgetItem
+from PySide2.QtGui import QIntValidator
+from PySide2.QtCore import Qt
 
 from mapclientplugins.pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwidget import Ui_Dialog
 from traits.api import HasTraits, Instance, on_trait_change, \
@@ -31,15 +32,16 @@ from traits.api import HasTraits, Instance, on_trait_change, \
 from gias2.mappluginutils.mayaviviewer import MayaviViewerObjectsContainer, MayaviViewerLandmark, colours
 import numpy as np
 
+
 class MayaviHJCPredictionViewerWidget(QDialog):
     '''
     Configure dialog to present the user with the options to configure this step.
     '''
     defaultColor = colours['bone']
-    objectTableHeaderColumns = {'landmarks':0}
-    backgroundColour = (0.0,0.0,0.0)
-    _landmarkRenderArgs = {'mode':'sphere', 'scale_factor':5.0, 'color':(0,1,0)}
-    _hjcRenderArgs = {'mode':'sphere', 'scale_factor':10.0, 'color':(1,0,0)}
+    objectTableHeaderColumns = {'landmarks': 0}
+    backgroundColour = (0.0, 0.0, 0.0)
+    _landmarkRenderArgs = {'mode': 'sphere', 'scale_factor': 5.0, 'color': (0, 1, 0)}
+    _hjcRenderArgs = {'mode': 'sphere', 'scale_factor': 10.0, 'color': (1, 0, 0)}
 
     def __init__(self, landmarks, config, predictFunc, predMethods, popClasses, parent=None):
         '''
@@ -81,7 +83,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
             self._objects.addObject(ln, MayaviViewerLandmark(ln, self._landmarks[ln],
                                                              renderArgs=self._landmarkRenderArgs)
                                     )
-        
+
         hjcl = self._objects.getObject('HJC_left')
         hjcl.setRenderArgs(self._hjcRenderArgs)
         hjcr = self._objects.getObject('HJC_right')
@@ -156,7 +158,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         self._ui.tableWidget.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self._ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self._ui.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
-        
+
         r = 0
         for ln in self._landmarkNames:
             self._addObjectToTable(r, ln, self._objects.getObject(ln))
@@ -173,7 +175,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
 
     def _addObjectToTable(self, row, name, obj, checked=True):
         typeName = obj.typeName
-        print('adding to table: %s (%s)'%(name, typeName))
+        print('adding to table: %s (%s)' % (name, typeName))
         tableItem = QTableWidgetItem(name)
         if checked:
             tableItem.setCheckState(Qt.Checked)
@@ -186,9 +188,9 @@ class MayaviHJCPredictionViewerWidget(QDialog):
     def _tableItemClicked(self):
         selectedRow = self._ui.tableWidget.currentRow()
         self.selectedObjectName = self._ui.tableWidget.item(
-                                    selectedRow,
-                                    self.objectTableHeaderColumns['landmarks']
-                                    ).text()
+            selectedRow,
+            self.objectTableHeaderColumns['landmarks']
+        ).text()
         print(selectedRow)
         print(self.selectedObjectName)
 
@@ -197,10 +199,10 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         # name = self._getSelectedObjectName()
 
         # checked changed item is actually the checkbox
-        if tableItem.column()==self.objectTableHeaderColumns['landmarks']:
+        if tableItem.column() == self.objectTableHeaderColumns['landmarks']:
             # get visible status
             name = tableItem.text()
-            visible = tableItem.checkState().name=='Checked'
+            visible = tableItem.checkState().name == 'Checked'
 
             print('visibleboxchanged name', name)
             print('visibleboxchanged visible', visible)
@@ -267,13 +269,13 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         # self._ui.tableWidget.removeRow(2)
         # reset registered datacloud
         hjclObj = self._objects.getObject('HJC_left')
-        hjclObj.updateGeometry(np.array([0,0,0]), self._scene)
+        hjclObj.updateGeometry(np.array([0, 0, 0]), self._scene)
         hjclTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_left'),
                                                   self.objectTableHeaderColumns['landmarks'])
         hjclTableItem.setCheckState(Qt.Unchecked)
 
         hjcrObj = self._objects.getObject('HJC_right')
-        hjcrObj.updateGeometry(np.array([0,0,0]), self._scene)
+        hjcrObj.updateGeometry(np.array([0, 0, 0]), self._scene)
         hjcrTableItem = self._ui.tableWidget.item(self._landmarkNames.index('HJC_right'),
                                                   self.objectTableHeaderColumns['landmarks'])
         hjcrTableItem.setCheckState(Qt.Unchecked)
@@ -301,7 +303,7 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         for r in range(self._ui.tableWidget.rowCount()):
             tableItem = self._ui.tableWidget.item(r, self.objectTableHeaderColumns['landmarks'])
             name = tableItem.text()
-            visible = tableItem.checkState().name=='Checked'
+            visible = tableItem.checkState().name == 'Checked'
             obj = self._objects.getObject(name)
             print(obj.name)
             if obj.sceneObject:
@@ -315,9 +317,9 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         filename = self._ui.screenshotFilenameLineEdit.text()
         width = int(self._ui.screenshotPixelXLineEdit.text())
         height = int(self._ui.screenshotPixelYLineEdit.text())
-        self._scene.mlab.savefig( filename, size=( width, height ) )
+        self._scene.mlab.savefig(filename, size=(width, height))
 
-    #================================================================#
+    # ================================================================#
     @on_trait_change('scene.activated')
     def testPlot(self):
         # This function is called when the view is opened. We don't
@@ -328,7 +330,5 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         # We can do normal mlab calls on the embedded scene.
         self._scene.mlab.test_points3d()
 
-
     # def _saveImage_fired( self ):
     #     self.scene.mlab.savefig( str(self.saveImageFilename), size=( int(self.saveImageWidth), int(self.saveImageLength) ) )
-        
