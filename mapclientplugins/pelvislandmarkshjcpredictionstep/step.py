@@ -163,8 +163,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         then set:
             self._configured = True
         '''
-        # dlg = ConfigureDialog(METHODS, POP_CLASS)
-        dlg = ConfigureDialog(self._main_window)
+        dlg = ConfigureDialog(METHODS, POP_CLASS, self._main_window)
         dlg.identifierOccursCount = self._identifierOccursCount
         dlg.setConfig(self._config)
         dlg.validate()
@@ -202,8 +201,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
         '''
         self._config.update(json.loads(string))
 
-        # d = ConfigureDialog(METHODS, POP_CLASS)
-        d = ConfigureDialog(self._main_window)
+        d = ConfigureDialog(METHODS, POP_CLASS)
         d.identifierOccursCount = self._identifierOccursCount
         d.setConfig(self._config)
         self._configured = d.validate()
