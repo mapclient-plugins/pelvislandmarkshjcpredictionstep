@@ -21,9 +21,9 @@ import os
 
 os.environ['ETS_TOOLKIT'] = 'qt5'
 
-from PySide2.QtWidgets import QDialog, QAbstractItemView, QTableWidgetItem
-from PySide2.QtGui import QIntValidator
-from PySide2.QtCore import Qt
+from PySide6.QtWidgets import QDialog, QAbstractItemView, QTableWidgetItem
+from PySide6.QtGui import QIntValidator
+from PySide6.QtCore import Qt
 
 from mapclientplugins.pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwidget import Ui_Dialog
 from traits.api import HasTraits, Instance, on_trait_change, \
