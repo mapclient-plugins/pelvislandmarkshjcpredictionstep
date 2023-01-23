@@ -8,8 +8,9 @@ from mapclient.mountpoints.workflowstep import WorkflowStepMountPoint
 from mapclientplugins.pelvislandmarkshjcpredictionstep.configuredialog import ConfigureDialog
 from mapclientplugins.pelvislandmarkshjcpredictionstep.hjcpredictionviewerwidget import MayaviHJCPredictionViewerWidget
 
-from gias2.musculoskeletal import pelvis_hjc_estimation as hjc
-from gias2.musculoskeletal import model_alignment as ma
+from gias3.musculoskeletal import pelvis_hjc_estimation as hjc
+from gias3.musculoskeletal import model_alignment as ma
+
 import numpy as np
 
 METHODS = ('Seidel', 'Bell', 'Tylkowski')
@@ -100,7 +101,7 @@ class PelvisLandmarksHJCPredictionStep(WorkflowStepMountPoint):
                                                                self._hipLandmarks['RASIS'],
                                                                self._hipLandmarks['LPSIS'],
                                                                self._hipLandmarks['RPSIS'],
-                                                               returnT=True)
+                                                               return_t=True)
         self._hipLandmarksAligned = dict(list(zip(landmarkNames, landmarkCoordsAligned)))
         self._inverseT = np.linalg.inv(np.vstack([alignT, [0, 0, 0, 1]]))
 

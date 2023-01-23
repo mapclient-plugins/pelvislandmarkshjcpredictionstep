@@ -29,7 +29,8 @@ from mapclientplugins.pelvislandmarkshjcpredictionstep.ui_hjcpredictionviewerwid
 from traits.api import HasTraits, Instance, on_trait_change, \
     Int, Dict
 
-from gias2.mappluginutils.mayaviviewer import MayaviViewerObjectsContainer, MayaviViewerLandmark, colours
+from gias3.mapclientpluginutilities.viewers import MayaviViewerObjectsContainer, MayaviViewerLandmark, colours
+
 import numpy as np
 
 
@@ -81,15 +82,15 @@ class MayaviHJCPredictionViewerWidget(QDialog):
         self._objects = MayaviViewerObjectsContainer()
         for ln in self._landmarkNames:
             self._objects.addObject(ln, MayaviViewerLandmark(ln, self._landmarks[ln],
-                                                             renderArgs=self._landmarkRenderArgs)
+                                                             render_args=self._landmarkRenderArgs)
                                     )
 
         hjcl = self._objects.getObject('HJC_left')
         hjcl.setRenderArgs(self._hjcRenderArgs)
         hjcr = self._objects.getObject('HJC_right')
         hjcr.setRenderArgs(self._hjcRenderArgs)
-        # self._objects.addObject('HJC_left', MayaviViewerLandmark('HJC_left', [0,0,0], renderArgs=self._hjcRenderArgs))
-        # self._objects.addObject('HJC_right', MayaviViewerLandmark('HJC_right', [0,0,0], renderArgs=self._hjcRenderArgs))
+        # self._objects.addObject('HJC_left', MayaviViewerLandmark('HJC_left', [0,0,0], render_args=self._hjcRenderArgs))
+        # self._objects.addObject('HJC_right', MayaviViewerLandmark('HJC_right', [0,0,0], render_args=self._hjcRenderArgs))
 
     def _setupGui(self):
         self._ui.screenshotPixelXLineEdit.setValidator(QIntValidator())
